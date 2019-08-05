@@ -23,6 +23,11 @@ Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 unsigned long led[NUMPIXELS];
 int color[NUMPIXELS];
+int currentLED = 0;
+
+int buttonDebounceDelay = 200;
+unsigned long buttonLastRead = 0;
+
 int mode = 1;
 
 void setup() {
@@ -49,10 +54,10 @@ void loop() {
 
   switch (mode) {
     case 1:
-      carousel(80, 6);
+      carousel(t, 80, 6);
       break;
     case 2:
-      lightning(2, 3);
+      lightning(t, 2, 3);
       break;
     case 3:
       sparkle(t, 2, 250);
@@ -72,25 +77,34 @@ void off() {
   strip.show();
 }
 
-void carousel(int speed, int length) {
-  for (int s = 0; s < NUMPIXELS; s++) {
-    for (int i = 0; i < NUMPIXELS; i++) {
-      int v = abs(i - s);
-
-      if (v % (length * 2) < length) {
-        strip.setPixelColor(i, strip.ColorHSV(250, 255, 100));
-      }
-      else {
-        strip.setPixelColor(i, strip.ColorHSV(2000, 225, 100));
-      }
-    }
-    
-    strip.show();
-    delay(speed);
+void carousel(unsigned long t, int speed, int length) {
+  if (t % speed != 0) {
+    return;
   }
+
+  int s = currentLED;
+
+  for (int i = 0; i < NUMPIXELS; i++) {
+    int v = abs(i - s);
+
+    if (v % (length * 2) < length) {
+      strip.setPixelColor(i, strip.ColorHSV(250, 255, 100));
+    }
+    else {
+      strip.setPixelColor(i, strip.ColorHSV(2000, 225, 100));
+    }
+  }
+  
+  strip.show();
+  
+  currentLED = (currentLED + 1) % NUMPIXELS;
 }
 
-void lightning(int speed, int duration) {
+void lightning(unsigned long t, int speed, int duration) {
+  if (t % speed != 0) {
+    return;
+  }
+  
   int i = random(0, NUMPIXELS);
 
   led[i] = duration;
@@ -106,7 +120,6 @@ void lightning(int speed, int duration) {
   }
 
   strip.show();
-  delay(speed);
 }
 
 void sparkle(unsigned long t, int speed, int duration) {
@@ -134,5 +147,10 @@ void sparkle(unsigned long t, int speed, int duration) {
 }
 
 void handleButtonPress() {
-  mode = (mode + 1) % 4;
+  unsigned long t = millis();
+
+  if (t > buttonLastRead + buttonDebounceDelay) {
+    mode = (mode + 1) % 4;
+    buttonLastRead = t;
+  }
 }
