@@ -8,7 +8,9 @@
 #endif
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN        7 // On Trinket or Gemma, suggest changing this to 1
+#define LED_PIN        7 // On Trinket or Gemma, suggest changing this to 1
+
+#define BUTTON_PIN     2
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 150 // Popular NeoPixel ring size
@@ -17,10 +19,11 @@
 // and which pin to use to send signals. Note that for older NeoPixel
 // strips you might need to change the third parameter -- see the
 // strandtest example for more information on possible values.
-Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 unsigned long led[NUMPIXELS];
 int color[NUMPIXELS];
+int mode = 1;
 
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -29,21 +32,44 @@ void setup() {
   clock_prescale_set(clock_div_1);
 #endif
   // END of Trinket-specific code.
+  
+  //Serial.begin(9600); // Trun on debugging
+
+  pinMode(BUTTON_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButtonPress, RISING);
 
   strip.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.clear();
-  strip.show();            // Turn OFF all pixels ASAP
   strip.setBrightness(100); // Set BRIGHTNESS to about 1/5 (max = 255)
 
-  //Serial.begin(9600); // Trun on debugging
+  off();
 }
 
 void loop() {
   unsigned long t = millis();
-  
-  //carousel(80, 6);
-  //lightning(2, 3);
-  sparkle(t, 2, 250);
+
+  switch (mode) {
+    case 1:
+      carousel(80, 6);
+      break;
+    case 2:
+      lightning(2, 3);
+      break;
+    case 3:
+      sparkle(t, 2, 250);
+      break;
+    default:
+      off();
+      break;
+  }
+}
+
+void off() {
+  for (int i = 0; i < NUMPIXELS; i++) {
+    led[i] = 0;
+  }
+
+  strip.clear();
+  strip.show();
 }
 
 void carousel(int speed, int length) {
@@ -105,4 +131,8 @@ void sparkle(unsigned long t, int speed, int duration) {
   }
   
   strip.show();
+}
+
+void handleButtonPress() {
+  mode = (mode + 1) % 4;
 }
