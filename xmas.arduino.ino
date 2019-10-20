@@ -13,7 +13,7 @@
 #define BUTTON_PIN     2
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS 150 // Popular NeoPixel ring size
+#define NUMPIXELS 275
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -21,8 +21,6 @@
 // strandtest example for more information on possible values.
 Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-unsigned long led[NUMPIXELS];
-int color[NUMPIXELS];
 int currentLED = 0;
 
 int buttonDebounceDelay = 200;
@@ -54,13 +52,13 @@ void loop() {
 
   switch (mode) {
     case 1:
-      carousel(t, 80, 6);
+      lightsOn2();
       break;
     case 2:
-      lightning(t, 2, 3);
+      lightsOn1();
       break;
     case 3:
-      sparkle(t, 2, 250);
+      carousel(t, 80, 6);
       break;
     default:
       off();
@@ -69,11 +67,25 @@ void loop() {
 }
 
 void off() {
-  for (int i = 0; i < NUMPIXELS; i++) {
-    led[i] = 0;
-  }
-
   strip.clear();
+  strip.show();
+}
+
+void lightsOn1() {
+  for (int i = 0; i < NUMPIXELS; i++) {
+    if (i % 12 < 4) {
+      strip.setPixelColor(i, strip.Color(0, 0, 0));
+    }
+    else {
+      strip.setPixelColor(i, strip.ColorHSV(6000, 200, 200));
+    }
+  }
+  
+  strip.show();
+}
+
+void lightsOn2() {
+  strip.fill(strip.ColorHSV(6000, 200, 150));
   strip.show();
 }
 
@@ -98,52 +110,6 @@ void carousel(unsigned long t, int speed, int length) {
   strip.show();
   
   currentLED = (currentLED + 1) % NUMPIXELS;
-}
-
-void lightning(unsigned long t, int speed, int duration) {
-  if (t % speed != 0) {
-    return;
-  }
-  
-  int i = random(0, NUMPIXELS);
-
-  led[i] = duration;
-
-  for (int l = 0; l < NUMPIXELS; l++) {
-    if (led[l] > 0) {
-      strip.setPixelColor(l, strip.ColorHSV(2000, 225, 255));
-      led[l]--;
-    }
-    else {
-      strip.setPixelColor(l, strip.Color(0, 0, 0));
-    }
-  }
-
-  strip.show();
-}
-
-void sparkle(unsigned long t, int speed, int duration) {
-  if (t % speed == 0) {
-    int i = random(0, NUMPIXELS);
-    if (led[i] == 0) {
-      led[i] = t;
-      color[i] = random(2000, 3000);
-    }
-  }
-
-  for (int l = 0; l < NUMPIXELS; l++) {
-    if (led[l] + duration > t) {
-      int d = int(t - led[l]);
-      double m = double(d) / double(duration);
-      strip.setPixelColor(l, strip.ColorHSV(color[l], 225, int(255 * m)));
-    }
-    else {
-      led[l] = 0;
-      strip.setPixelColor(l, strip.Color(0, 0, 0));
-    }
-  }
-  
-  strip.show();
 }
 
 void handleButtonPress() {
