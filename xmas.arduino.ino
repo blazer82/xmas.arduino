@@ -21,12 +21,13 @@
 // strandtest example for more information on possible values.
 Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-int currentLED = 0;
+unsigned char led[NUMPIXELS];
+unsigned int currentLED = 0;
 
-int buttonDebounceDelay = 200;
+unsigned int buttonDebounceDelay = 200;
 unsigned long buttonLastRead = 0;
 
-int mode = 1;
+unsigned int mode = 1;
 
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -58,6 +59,9 @@ void loop() {
       lightsOn1();
       break;
     case 3:
+      halloweenLights(t, 5000, 600);
+      break;
+    case 4:
       carousel(t, 80, 6);
       break;
     default:
@@ -89,14 +93,48 @@ void lightsOn2() {
   strip.show();
 }
 
-void carousel(unsigned long t, int speed, int length) {
+void halloweenLights(unsigned long t, unsigned long period, unsigned int duration) {
+  if (t % period < duration) {
+    lightning(t, 2, 3);
+  }
+  else {
+    strip.fill(strip.ColorHSV(1000, 255, 150));
+    strip.show();
+  }
+
+  //lightning(t, 2, 3);
+}
+
+void lightning(unsigned long t, unsigned int speed, unsigned int duration) {
+  if (t % speed != 0) {
+    return;
+  }
+  
+  int i = random(0, NUMPIXELS);
+
+  led[i] = duration;
+
+  for (int l = 0; l < NUMPIXELS; l++) {
+    if (led[l] > 0) {
+      strip.setPixelColor(l, strip.ColorHSV(6000, 200, 255));
+      led[l]--;
+    }
+    else {
+      strip.setPixelColor(l, strip.Color(0, 0, 0));
+    }
+  }
+
+  strip.show();
+}
+
+void carousel(unsigned long t, unsigned int speed, unsigned int length) {
   if (t % speed != 0) {
     return;
   }
 
-  int s = currentLED;
+  unsigned int s = currentLED;
 
-  for (int i = 0; i < NUMPIXELS; i++) {
+  for (unsigned int i = 0; i < NUMPIXELS; i++) {
     int v = abs(i - s);
 
     if (v % (length * 2) < length) {
@@ -116,7 +154,7 @@ void handleButtonPress() {
   unsigned long t = millis();
 
   if (t > buttonLastRead + buttonDebounceDelay) {
-    mode = (mode + 1) % 4;
+    mode = (mode + 1) % 5;
     buttonLastRead = t;
   }
 }
