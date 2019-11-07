@@ -2,6 +2,7 @@
 // Released under the GPLv3 license to match the rest of the
 // Adafruit NeoPixel library
 
+#include <EEPROM.h>
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
@@ -46,6 +47,8 @@ void setup() {
   strip.setBrightness(100); // Set BRIGHTNESS to about 1/5 (max = 255)
 
   off();
+
+  mode = getMode(EEPROM.read(0));
 }
 
 void loop() {
@@ -154,7 +157,13 @@ void handleButtonPress() {
   unsigned long t = millis();
 
   if (t > buttonLastRead + buttonDebounceDelay) {
-    mode = (mode + 1) % 5;
+    mode = getMode(mode + 1);
     buttonLastRead = t;
+
+    EEPROM.write(0, mode);
   }
+}
+
+unsigned int getMode(unsigned int mode) {
+  return mode % 5;
 }
