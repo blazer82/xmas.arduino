@@ -1,20 +1,20 @@
-// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
-// Released under the GPLv3 license to match the rest of the
-// Adafruit NeoPixel library
-
+#include <Arduino.h>
 #include <EEPROM.h>
-#include <Adafruit_NeoPixel.h>
+
+#include "Adafruit_NeoPixel.h"
+
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define LED_PIN        7 // On Trinket or Gemma, suggest changing this to 1
+#define LED_PIN 7
 
-#define BUTTON_PIN     2
+#define BUTTON_PIN 2
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 275
+#define REPEAT 2
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -30,6 +30,15 @@ unsigned long buttonLastRead = 0;
 
 unsigned int mode = 1;
 
+unsigned int getMode(unsigned int m);
+void handleButtonPress();
+void off();
+void lightsOn1();
+void lightsOn2();
+void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
+void lightning(unsigned long t, unsigned int speed, unsigned int duration);
+void carousel(unsigned long t, unsigned int speed, unsigned int length);
+
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
   // Any other board, you can remove this part (but no harm leaving it):
@@ -38,21 +47,25 @@ void setup() {
 #endif
   // END of Trinket-specific code.
   
-  //Serial.begin(9600); // Trun on debugging
+  Serial.begin(9600); // Trun on debugging
 
   pinMode(BUTTON_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButtonPress, RISING);
 
   strip.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.setBrightness(100); // Set BRIGHTNESS to about 1/5 (max = 255)
+  strip.setBrightness(100); // Set BRIGHTNESS
 
   off();
 
   mode = getMode(EEPROM.read(0));
+
+  Serial.println("All set up");
 }
 
 void loop() {
   unsigned long t = millis();
+
+  while(!strip.canShow());
 
   switch (mode) {
     case 1:
@@ -75,7 +88,9 @@ void loop() {
 
 void off() {
   strip.clear();
-  strip.show();
+  for (unsigned char i = 0; i < REPEAT; i++) {
+    strip.show();
+  }
 }
 
 void lightsOn1() {
@@ -88,12 +103,16 @@ void lightsOn1() {
     }
   }
   
-  strip.show();
+  for (unsigned char i = 0; i < REPEAT; i++) {
+    strip.show();
+  }
 }
 
 void lightsOn2() {
   strip.fill(strip.ColorHSV(6000, 200, 150));
-  strip.show();
+  for (unsigned char i = 0; i < REPEAT; i++) {
+    strip.show();
+  }
 }
 
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration) {
@@ -161,9 +180,11 @@ void handleButtonPress() {
     buttonLastRead = t;
 
     EEPROM.write(0, mode);
+
+    Serial.println(mode);
   }
 }
 
-unsigned int getMode(unsigned int mode) {
-  return mode % 5;
+unsigned int getMode(unsigned int m) {
+  return m % 5;
 }
