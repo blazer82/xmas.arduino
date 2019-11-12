@@ -22,7 +22,8 @@
 // strandtest example for more information on possible values.
 Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-unsigned char led[NUMPIXELS];
+unsigned int led[NUMPIXELS];
+
 unsigned int currentLED = 0;
 
 unsigned int buttonDebounceDelay = 200;
@@ -35,6 +36,7 @@ void handleButtonPress();
 void off();
 void lightsOn1();
 void lightsOn2();
+void sparkle(unsigned int t, unsigned int speed, unsigned int duration);
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
 void lightning(unsigned long t, unsigned int speed, unsigned int duration);
 void carousel(unsigned long t, unsigned int speed, unsigned int length);
@@ -53,7 +55,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButtonPress, RISING);
 
   strip.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.setBrightness(100); // Set BRIGHTNESS
+  strip.setBrightness(255); // Set BRIGHTNESS
 
   off();
 
@@ -65,6 +67,8 @@ void setup() {
 void loop() {
   unsigned long t = millis();
 
+  if (t < 2000) { return; } // Wait a couple of seconds
+
   while(!strip.canShow());
 
   switch (mode) {
@@ -75,7 +79,7 @@ void loop() {
       lightsOn1();
       break;
     case 3:
-      halloweenLights(t, 5000, 600);
+      sparkle(t & 0xFFFF, 2, 250);
       break;
     case 4:
       carousel(t, 80, 6);
@@ -99,7 +103,7 @@ void lightsOn1() {
       strip.setPixelColor(i, strip.Color(0, 0, 0));
     }
     else {
-      strip.setPixelColor(i, strip.ColorHSV(6000, 200, 200));
+      strip.setPixelColor(i, strip.ColorHSV(6000, 200, 75));
     }
   }
   
@@ -109,7 +113,7 @@ void lightsOn1() {
 }
 
 void lightsOn2() {
-  strip.fill(strip.ColorHSV(6000, 200, 150));
+  strip.fill(strip.ColorHSV(6000, 200, 50));
   for (unsigned char i = 0; i < REPEAT; i++) {
     strip.show();
   }
@@ -120,7 +124,7 @@ void halloweenLights(unsigned long t, unsigned long period, unsigned int duratio
     lightning(t, 2, 3);
   }
   else {
-    strip.fill(strip.ColorHSV(1000, 255, 150));
+    strip.fill(strip.ColorHSV(1000, 255, 75));
     strip.show();
   }
 
@@ -147,6 +151,32 @@ void lightning(unsigned long t, unsigned int speed, unsigned int duration) {
   }
 
   strip.show();
+}
+
+void sparkle(unsigned int t, unsigned int speed, unsigned int duration) {
+  if (t % speed == 0) {
+    int i = random(0, NUMPIXELS);
+    if (led[i] == 0) {
+      led[i] = t;
+      //color[i] = random(2000, 3000);
+    }
+  }
+
+  for (int l = 0; l < NUMPIXELS; l++) {
+    if (led[l] + duration > t) {
+      int d = int(t - led[l]);
+      double m = double(d) / double(duration);
+      strip.setPixelColor(l, strip.ColorHSV(6000, 200, int(255 * m)));
+    }
+    else {
+      led[l] = 0;
+      strip.setPixelColor(l, strip.Color(0, 0, 0));
+    }
+  }
+  
+  for (unsigned char i = 0; i < REPEAT; i++) {
+    strip.show();
+  }
 }
 
 void carousel(unsigned long t, unsigned int speed, unsigned int length) {
