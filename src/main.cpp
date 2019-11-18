@@ -31,6 +31,8 @@ unsigned long buttonLastRead = 0;
 
 unsigned int mode = 1;
 
+bool set = false;
+
 unsigned int getMode(unsigned int m);
 void handleButtonPress();
 void off();
@@ -73,10 +75,10 @@ void loop() {
 
   switch (mode) {
     case 1:
-      lightsOn2();
+      if (!set) { lightsOn2(); }
       break;
     case 2:
-      lightsOn1();
+      if (!set) { lightsOn1(); }
       break;
     case 3:
       sparkle(t & 0xFFFF, 2, 250);
@@ -85,9 +87,11 @@ void loop() {
       carousel(t, 80, 6);
       break;
     default:
-      off();
+      if (!set) { off(); }
       break;
   }
+
+  set = true;
 }
 
 void off() {
@@ -208,6 +212,8 @@ void handleButtonPress() {
   if (t > buttonLastRead + buttonDebounceDelay) {
     mode = getMode(mode + 1);
     buttonLastRead = t;
+
+    set = false;
 
     EEPROM.write(0, mode);
 
