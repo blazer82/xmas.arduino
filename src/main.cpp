@@ -13,7 +13,7 @@
 #define BUTTON_PIN 2
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS 275
+#define NUMPIXELS 277
 #define REPEAT 2
 
 // When setting up the NeoPixel library, we tell it how many pixels,
