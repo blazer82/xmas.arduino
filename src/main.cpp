@@ -38,6 +38,7 @@ void handleButtonPress();
 void off();
 void lightsOn1();
 void lightsOn2();
+void waves(unsigned long t, unsigned int speed, unsigned char size);
 void sparkle(unsigned int t, unsigned int speed, unsigned int duration);
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
 void lightning(unsigned long t, unsigned int speed, unsigned int duration);
@@ -81,9 +82,12 @@ void loop() {
       if (!set) { lightsOn1(); }
       break;
     case 3:
-      sparkle(t & 0xFFFF, 2, 250);
+      waves(t, 15, 40);
       break;
     case 4:
+      sparkle(t & 0xFFFF, 5, 300);
+      break;
+    case 5:
       carousel(t, 80, 6);
       break;
     default:
@@ -95,7 +99,9 @@ void loop() {
 }
 
 void off() {
-  strip.clear();
+  for (int i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, strip.Color(0, 0, 0));
+  }
   for (unsigned char i = 0; i < REPEAT; i++) {
     strip.show();
   }
@@ -168,14 +174,27 @@ void sparkle(unsigned int t, unsigned int speed, unsigned int duration) {
 
   for (int l = 0; l < NUMPIXELS; l++) {
     if (led[l] + duration > t) {
-      int d = int(t - led[l]);
-      double m = double(d) / double(duration);
-      strip.setPixelColor(l, strip.ColorHSV(6000, 200, int(255 * m)));
+      double d = double(t - led[l]) / double(duration);
+      double m = d * (d - 2.0D) + 1.0D; // Ease-out
+      strip.setPixelColor(l, strip.ColorHSV(6000, 200, int(255.0D * m)));
     }
     else {
       led[l] = 0;
       strip.setPixelColor(l, strip.Color(0, 0, 0));
     }
+  }
+  
+  for (unsigned char i = 0; i < REPEAT; i++) {
+    strip.show();
+  }
+}
+
+void waves(unsigned long t, unsigned int speed, unsigned char size) {
+  unsigned int start = (speed * t / 1000) % NUMPIXELS;
+
+  for (int i = 0; i < NUMPIXELS; i++) {
+    unsigned char b = 50 + 150 * max(0, sin((10.0D / (double)size) * (i - start) / PI));
+    strip.setPixelColor(i, strip.ColorHSV(6000, 200, b));
   }
   
   for (unsigned char i = 0; i < REPEAT; i++) {
@@ -222,5 +241,5 @@ void handleButtonPress() {
 }
 
 unsigned int getMode(unsigned int m) {
-  return m % 5;
+  return m % 7;
 }
