@@ -31,6 +31,8 @@ unsigned long buttonLastRead = 0;
 
 unsigned int mode = 1;
 
+unsigned long prevT = 0;
+
 bool set = false;
 
 unsigned int getMode(unsigned int m);
@@ -39,7 +41,7 @@ void off();
 void lightsOn1();
 void lightsOn2();
 void waves(unsigned long t, unsigned int speed, unsigned char size);
-void sparkle(unsigned int t, unsigned int speed, unsigned int duration);
+void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
 void lightning(unsigned long t, unsigned int speed, unsigned int duration);
 void carousel(unsigned long t, unsigned int speed, unsigned int length);
@@ -69,6 +71,7 @@ void setup() {
 
 void loop() {
   unsigned long t = millis();
+  unsigned int deltaT = t - prevT;
 
   if (t < 2000) { return; } // Wait a couple of seconds
 
@@ -85,7 +88,7 @@ void loop() {
       waves(t, 15, 40);
       break;
     case 4:
-      sparkle(t & 0xFFFF, 5, 300);
+      sparkle(t, deltaT, 5, 300);
       break;
     case 5:
       carousel(t, 80, 6);
@@ -96,6 +99,8 @@ void loop() {
   }
 
   set = true;
+
+  prevT = t;
 }
 
 void off() {
@@ -163,20 +168,21 @@ void lightning(unsigned long t, unsigned int speed, unsigned int duration) {
   strip.show();
 }
 
-void sparkle(unsigned int t, unsigned int speed, unsigned int duration) {
+void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration) {
   if (t % speed == 0) {
     int i = random(0, NUMPIXELS);
     if (led[i] == 0) {
-      led[i] = t;
+      led[i] = duration;
       //color[i] = random(2000, 3000);
     }
   }
 
   for (int l = 0; l < NUMPIXELS; l++) {
-    if (led[l] + duration > t) {
-      double d = double(t - led[l]) / double(duration);
+    if (led[l] > deltaT) {
+      led[l] -= deltaT;
+      double d = double(led[l]) / double(duration);
       double m = d * (d - 2.0D) + 1.0D; // Ease-out
-      strip.setPixelColor(l, strip.ColorHSV(6000, 200, int(255.0D * m)));
+      strip.setPixelColor(l, strip.ColorHSV(5000, 235, int(255.0D * m)));
     }
     else {
       led[l] = 0;
