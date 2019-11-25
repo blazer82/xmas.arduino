@@ -181,7 +181,7 @@ void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned 
     if (led[l] > deltaT) {
       led[l] -= deltaT;
       double d = double(led[l]) / double(duration);
-      double m = d * (d - 2.0D) + 1.0D; // Ease-out
+      double m = -d * (d - 2.0D); // Ease-out
       strip.setPixelColor(l, strip.ColorHSV(5000, 235, int(255.0D * m)));
     }
     else {
