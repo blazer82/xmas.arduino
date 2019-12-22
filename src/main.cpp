@@ -23,6 +23,7 @@
 Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 unsigned int led[NUMPIXELS];
+bool color[NUMPIXELS];
 
 unsigned int currentLED = 0;
 
@@ -40,8 +41,8 @@ void handleButtonPress();
 void off();
 void lightsOn1();
 void lightsOn2();
-void waves(unsigned long t, unsigned int speed, unsigned char size);
 void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
+void sparkleXmas(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
 void lightning(unsigned long t, unsigned int speed, unsigned int duration);
 void carousel(unsigned long t, unsigned int speed, unsigned int length);
@@ -85,7 +86,7 @@ void loop() {
       if (!set) { lightsOn1(); }
       break;
     case 3:
-      waves(t, 15, 40);
+      sparkleXmas(t, deltaT, 5, 300);
       break;
     case 4:
       sparkle(t, deltaT, 5, 300);
@@ -173,7 +174,6 @@ void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned 
     int i = random(0, NUMPIXELS);
     if (led[i] == 0) {
       led[i] = duration;
-      //color[i] = random(2000, 3000);
     }
   }
 
@@ -195,12 +195,31 @@ void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned 
   }
 }
 
-void waves(unsigned long t, unsigned int speed, unsigned char size) {
-  unsigned int start = (speed * t / 1000) % NUMPIXELS;
+void sparkleXmas(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration) {
+  if (t % speed == 0) {
+    int i = random(0, NUMPIXELS);
+    if (led[i] == 0) {
+      led[i] = duration;
+      color[i] = deltaT % 2 == 0;
+    }
+  }
 
-  for (int i = 0; i < NUMPIXELS; i++) {
-    unsigned char b = 50 + 150 * max(0, sin((10.0D / (double)size) * (i - start) / PI));
-    strip.setPixelColor(i, strip.ColorHSV(6000, 200, b));
+  for (int l = 0; l < NUMPIXELS; l++) {
+    if (led[l] > deltaT) {
+      led[l] -= deltaT;
+      double d = double(led[l]) / double(duration);
+      double m = -d * (d - 2.0D); // Ease-out
+      if (color[l]) {
+        strip.setPixelColor(l, strip.ColorHSV(21845, 255, int(200.0D * m)));
+      }
+      else {
+        strip.setPixelColor(l, strip.ColorHSV(0, 255, int(255.0D * m)));
+      }
+    }
+    else {
+      led[l] = 0;
+      strip.setPixelColor(l, strip.Color(0, 0, 0));
+    }
   }
   
   for (unsigned char i = 0; i < REPEAT; i++) {
