@@ -93,10 +93,7 @@ void loop()
     }
     break;
   case 2:
-    if (!set)
-    {
-      lightsOn1();
-    }
+    halloweenLights(t, 5000, 600);
     break;
   case 3:
     sparkleXmas(t, deltaT, 5, 300);
@@ -170,7 +167,10 @@ void halloweenLights(unsigned long t, unsigned long period, unsigned int duratio
   else
   {
     strip.fill(strip.ColorHSV(1000, 255, 75));
-    strip.show();
+    for (unsigned char i = 0; i < REPEAT; i++)
+    {
+      strip.show();
+    }
   }
 
   //lightning(t, 2, 3);
@@ -200,7 +200,10 @@ void lightning(unsigned long t, unsigned int speed, unsigned int duration)
     }
   }
 
-  strip.show();
+  for (unsigned char i = 0; i < REPEAT; i++)
+  {
+    strip.show();
+  }
 }
 
 void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration)
