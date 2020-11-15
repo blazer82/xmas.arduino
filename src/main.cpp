@@ -13,8 +13,8 @@
 #define BUTTON_PIN 2
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS 277
-#define REPEAT 2
+#define NUMPIXELS 44
+#define REPEAT 1
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -23,7 +23,7 @@
 Adafruit_NeoPixel strip(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 unsigned int led[NUMPIXELS];
-bool color[NUMPIXELS];
+uint16_t color[NUMPIXELS];
 
 unsigned int currentLED = 0;
 
@@ -41,8 +41,10 @@ void handleButtonPress();
 void off();
 void lightsOn1();
 void lightsOn2();
+void lightsOnBlue();
 void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
 void sparkleXmas(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
+void sparkleColorful(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
 void lightning(unsigned long t, unsigned int speed, unsigned int duration);
 void carousel(unsigned long t, unsigned int speed, unsigned int length);
@@ -76,11 +78,6 @@ void loop()
   unsigned long t = millis();
   unsigned int deltaT = t - prevT;
 
-  if (t < 2000)
-  {
-    return;
-  } // Wait a couple of seconds
-
   while (!strip.canShow())
     ;
 
@@ -93,13 +90,16 @@ void loop()
     }
     break;
   case 2:
-    halloweenLights(t, 5000, 600);
+    if (!set)
+    {
+      lightsOnBlue();
+    }
     break;
   case 3:
-    sparkleXmas(t, deltaT, 5, 300);
+    sparkleColorful(t, deltaT, 50, 1000);
     break;
   case 4:
-    sparkle(t, deltaT, 5, 300);
+    sparkle(t, deltaT, 50, 1000);
     break;
   case 5:
     carousel(t, 80, 6);
@@ -152,6 +152,15 @@ void lightsOn1()
 void lightsOn2()
 {
   strip.fill(strip.ColorHSV(6000, 200, 50));
+  for (unsigned char i = 0; i < REPEAT; i++)
+  {
+    strip.show();
+  }
+}
+
+void lightsOnBlue()
+{
+  strip.fill(strip.ColorHSV((uint16_t)((double)0xFFFF * 0.6D), 200, 50));
   for (unsigned char i = 0; i < REPEAT; i++)
   {
     strip.show();
@@ -266,6 +275,40 @@ void sparkleXmas(unsigned long t, unsigned int deltaT, unsigned int speed, unsig
       {
         strip.setPixelColor(l, strip.ColorHSV(0, 255, int(255.0D * m)));
       }
+    }
+    else
+    {
+      led[l] = 0;
+      strip.setPixelColor(l, strip.Color(0, 0, 0));
+    }
+  }
+
+  for (unsigned char i = 0; i < REPEAT; i++)
+  {
+    strip.show();
+  }
+}
+
+void sparkleColorful(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration)
+{
+  if (t % speed == 0)
+  {
+    int i = random(0, NUMPIXELS);
+    if (led[i] == 0)
+    {
+      led[i] = duration;
+      color[i] = random(0, 0xFFFF);
+    }
+  }
+
+  for (int l = 0; l < NUMPIXELS; l++)
+  {
+    if (led[l] > deltaT)
+    {
+      led[l] -= deltaT;
+      double d = double(led[l]) / double(duration);
+      double m = -d * (d - 2.0D); // Ease-out
+      strip.setPixelColor(l, strip.ColorHSV(color[l], 255, int(200.0D * m)));
     }
     else
     {
