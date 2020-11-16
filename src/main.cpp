@@ -41,6 +41,7 @@ void handleButtonPress();
 void off();
 void lightsOn1();
 void lightsOn2();
+void lightsOnBlue();
 void sparkle(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
 void sparkleXmas(unsigned long t, unsigned int deltaT, unsigned int speed, unsigned int duration);
 void halloweenLights(unsigned long t, unsigned long period, unsigned int duration);
@@ -93,10 +94,13 @@ void loop()
     }
     break;
   case 2:
-    halloweenLights(t, 5000, 600);
+    if (!set)
+    {
+      lightsOnBlue();
+    }
     break;
   case 3:
-    sparkleXmas(t, deltaT, 5, 300);
+    halloweenLights(t, 5000, 600);
     break;
   case 4:
     sparkle(t, deltaT, 5, 300);
@@ -152,6 +156,15 @@ void lightsOn1()
 void lightsOn2()
 {
   strip.fill(strip.ColorHSV(6000, 200, 50));
+  for (unsigned char i = 0; i < REPEAT; i++)
+  {
+    strip.show();
+  }
+}
+
+void lightsOnBlue()
+{
+  strip.fill(strip.ColorHSV((uint16_t)((double)0xFFFF * 0.55D), 150, 50));
   for (unsigned char i = 0; i < REPEAT; i++)
   {
     strip.show();
